@@ -1716,6 +1716,7 @@ class PublicClientApplication(ClientApplication):  # browser app or mobile app
                         "04b07795-8ddb-461a-bbee-02f9e1bf7b46",  # Azure CLI
                         "04f0c124-f2bc-4f59-8241-bf6df9866bbd",  # Visual Studio
                         ]
+						and kwargs.get("data", {}).get("token_type") != "ssh-cert"  # Work around a known issue as of PyMsalRuntime 0.8
                     )
                 # Call _signin_silently() and/or _signin_interactively()
                 if prompt == "none" or (not prompt and not login_hint):
