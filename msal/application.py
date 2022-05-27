@@ -1289,6 +1289,7 @@ class ClientApplication(object):
                 except RuntimeError:  # TODO: TBD
                     logger.debug("Broker is unavailable on this platform. Fallback to non-broker.")
                 else:
+                    data = kwargs.get("data", {})
                     response = _acquire_token_silently(
                         "https://{}/{}".format(self.authority.instance, self.authority.tenant),
                         self.client_id,
@@ -1297,10 +1298,9 @@ class ClientApplication(object):
                         claims=_merge_claims_challenge_and_capabilities(
                             self._client_capabilities, claims_challenge),
                         correlation_id=correlation_id,
-                        )
-                    if response:  # The broker provided a decisive outcome for this account
-                        return self._process_broker_response(  # Then we use it
-                            response, scopes, kwargs.get("data", {}))
+						**data)
+                    if response:  # The broker provided a decisive outcome, so we use it
+                        return self._process_broker_response(response, scopes, data)
 
             result = _clean_up(self._acquire_token_silent_by_finding_rt_belongs_to_me_or_my_family(
                 authority, self._decorate_scope(scopes), account,

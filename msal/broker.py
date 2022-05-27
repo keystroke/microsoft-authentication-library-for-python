@@ -80,7 +80,7 @@ def _read_account_by_id(account_id, correlation_id):
         or None)  # None happens when the account was not created by broker
 
 
-def _convert_result(result, client_id):  # Mimic an on-the-wire response from AAD
+def _convert_result(result, client_id, expected_token_type=None):  # Mimic an on-the-wire response from AAD
     error = result.get_error()
     if error:
         return _convert_error(error, client_id)
@@ -95,8 +95,11 @@ def _convert_result(result, client_id):  # Mimic an on-the-wire response from AA
         "id_token_claims": id_token_claims,
         "client_info": account.get_client_info(),
         "_account_id": account.get_account_id(),
-		"token_type": "Bearer",  # Hardcoded, for now. It is unavailable from broker.
+		"token_type": expected_token_type or "Bearer",  # Workaround its absence from broker
         }.items() if v}
+    likely_a_cert = return_value["access_token"].startswith("AAAA")  # Empirical observation
+    if return_value["token_type"].lower() == "ssh-cert" and not likely_a_cert:
+        logger.warn("Looks like we could not get an SSH Cert")
     granted_scopes = result.get_granted_scopes()  # New in pymsalruntime 0.3.x
     if granted_scopes:
         return_value["scope"] = " ".join(granted_scopes)  # Mimic the on-the-wire data format
@@ -130,7 +133,8 @@ def _signin_silently(
         correlation_id or _get_new_correlation_id(),
         lambda result, callback_data=callback_data: callback_data.complete(result))
     callback_data.signal.wait()
-    return _convert_result(callback_data.result, client_id)
+    return _convert_result(
+        callback_data.result, client_id, expected_token_type=kwargs.get("token_type"))
 
 
 def _signin_interactively(
@@ -173,11 +177,13 @@ def _signin_interactively(
         login_hint,  # None value will be accepted since pymsalruntime 0.3+
         lambda result, callback_data=callback_data: callback_data.complete(result))
     callback_data.signal.wait()
-    return _convert_result(callback_data.result, client_id)
+    return _convert_result(
+        callback_data.result, client_id, expected_token_type=kwargs.get("token_type"))
 
 
 def _acquire_token_silently(
-        authority, client_id, account_id, scopes, claims=None, correlation_id=None):
+        authority, client_id, account_id, scopes, claims=None, correlation_id=None,
+        **kwargs):
     correlation_id = correlation_id or _get_new_correlation_id()
     account = _read_account_by_id(account_id, correlation_id)
     if isinstance(account, pymsalruntime.MSALRuntimeError):
@@ -188,6 +194,9 @@ def _acquire_token_silently(
     params.set_requested_scopes(scopes)
     if claims:
         params.set_decoded_claims(claims)
+    for k, v in kwargs.items():  # This can be used to support domain_hint, max_age, etc.
+        if v is not None:
+            params.set_additional_parameter(k, str(v))
     callback_data = _CallbackData()
     pymsalruntime.acquire_token_silently(
         params,
@@ -195,7 +204,8 @@ def _acquire_token_silently(
         account,
         lambda result, callback_data=callback_data: callback_data.complete(result))
     callback_data.signal.wait()
-    return _convert_result(callback_data.result, client_id)
+    return _convert_result(
+        callback_data.result, client_id, expected_token_type=kwargs.get("token_type"))
 
 
 def _acquire_token_interactively(
