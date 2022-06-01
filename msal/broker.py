@@ -92,6 +92,7 @@ def _convert_result(result, client_id, expected_token_type=None):  # Mimic an on
     return_value = {k: v for k, v in {
         "access_token": result.get_access_token(),
         "expires_in": result.get_access_token_expiry_time(),
+        "id_token": result.get_raw_id_token(),  # New in pymsalruntime 0.8.1
         "id_token_claims": id_token_claims,
         "client_info": account.get_client_info(),
         "_account_id": account.get_account_id(),
@@ -162,6 +163,9 @@ def _signin_interactively(
                 logger.warning("Using both select_account and login_hint is ambiguous. Ignoring login_hint.")
         else:
             logger.warning("prompt=%s is not supported by this module", prompt)
+    if not window:
+        # This fixes account picker hanging in IDE debug mode on some machines
+        params.set_additional_parameter("msal_gui_thread", "true")  # Since pymsalruntime 0.8.1
     if enable_msa_pt:
         _enable_msa_pt(params)
     for k, v in kwargs.items():  # This can be used to support domain_hint, max_age, etc.
