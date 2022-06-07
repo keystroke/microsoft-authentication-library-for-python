@@ -199,9 +199,10 @@ class TokenCache(object):
                         or data.get("username")  # Falls back to ROPC username
                         or event.get("username")  # Falls back to Federated ROPC username
                         or "",  # The schema does not like null
-                    "authority_type":
+                    "authority_type": event.get(
+                        "authority_type",  # Honor caller's choice of authority_type
                         self.AuthorityType.ADFS if realm == "adfs"
-                        else self.AuthorityType.MSSTS,
+                            else self.AuthorityType.MSSTS),
                     # "client_info": response.get("client_info"),  # Optional
                     }
                 self.modify(self.CredentialType.ACCOUNT, account, account)
