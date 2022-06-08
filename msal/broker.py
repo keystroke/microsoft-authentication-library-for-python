@@ -212,45 +212,6 @@ def _acquire_token_silently(
         callback_data.result, client_id, expected_token_type=kwargs.get("token_type"))
 
 
-def _acquire_token_interactively(
-        authority,
-        client_id,
-        account_id,
-        scopes,
-        prompt=None,  # TODO
-        claims=None,
-        extra_scopes_to_consent=None,  # TODO
-        max_age=None,  # TODO
-        correlation_id=None,
-        window=None,
-        **kwargs):
-    raise NotImplementedError("We ended up not currently using this function")
-    correlation_id = correlation_id or _get_new_correlation_id()
-    account = _read_account_by_id(account_id, correlation_id)
-    if isinstance(account, pymsalruntime.MSALRuntimeError):
-        return _convert_error(account, client_id)
-    if account is None:
-        return
-    params = pymsalruntime.MSALRuntimeAuthParameters(client_id, authority)
-    params.set_requested_scopes(scopes)
-    params.set_redirect_uri("placeholder")  # pymsalruntime 0.1 requires non-empty str,
-        # the actual redirect_uri will be overridden by a value hardcoded by the broker
-    if claims:
-        params.set_decoded_claims(claims)
-    for k, v in kwargs.items():  # This can be used to support domain_hint, max_age, etc.
-        if v is not None:
-            params.set_additional_parameter(k, str(v))
-    callback_data = _CallbackData()
-    pymsalruntime.acquire_token_interactively(
-        window or pymsalruntime.get_console_window() or pymsalruntime.get_desktop_window(),  # Since pymsalruntime 0.2+
-        params,
-        correlation_id,
-        account,
-        lambda result, callback_data=callback_data: callback_data.complete(result))
-    callback_data.signal.wait()
-    return callback_data.result
-
-
 def _signout_silently(client_id, account_id, correlation_id=None):
     correlation_id = correlation_id or _get_new_correlation_id()
     account = _read_account_by_id(account_id, correlation_id)

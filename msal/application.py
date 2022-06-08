@@ -425,7 +425,7 @@ class ClientApplication(object):
             This also means you could set this flag as True universally,
             as long as your app meets the following prerequisite:
 
-            * Installed optional dependency, e.g. ``pip install msal[broker]>=1.18,<2``.
+            * Installed optional dependency, e.g. ``pip install msal[broker]>=1.19,<2``.
               (Note that broker is currently only available on Windows 10+)
 
             * Register a new redirect_uri for your desktop app as:
@@ -441,7 +441,7 @@ class ClientApplication(object):
 
               * AAD and MSA accounts (i.e. Non-ADFS, non-B2C)
 
-            New in version 1.18.0.
+            New in version 1.19.0.
         """
         self.client_id = client_id
         self.client_credential = client_credential
