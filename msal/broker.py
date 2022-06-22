@@ -4,6 +4,7 @@ It relies on PyMsalRuntime which is the package providing broker's functionality
 from threading import Event
 import json
 import logging
+import time
 import uuid
 
 
@@ -91,7 +92,7 @@ def _convert_result(result, client_id, expected_token_type=None):  # Mimic an on
     #account.get_account_property("wam_account_ids")
     return_value = {k: v for k, v in {
         "access_token": result.get_access_token(),
-        "expires_in": result.get_access_token_expiry_time(),
+        "expires_in": result.get_access_token_expiry_time() - int(time.time()),  # Convert epoch to count-down
         "id_token": result.get_raw_id_token(),  # New in pymsalruntime 0.8.1
         "id_token_claims": id_token_claims,
         "client_info": account.get_client_info(),
