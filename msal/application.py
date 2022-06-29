@@ -566,8 +566,10 @@ class ClientApplication(object):
         if region_to_use:
             regional_host = ("{}.r.login.microsoftonline.com".format(region_to_use)
                 if central_authority.instance in (
-                    # The list came from https://github.com/AzureAD/microsoft-authentication-library-for-python/pull/358/files#r629400328
+                    # The list came from point 3 of the algorithm section in this internal doc
+                    # https://identitydivision.visualstudio.com/DevEx/_git/AuthLibrariesApiReview?path=/PinAuthToRegion/AAD%20SDK%20Proposal%20to%20Pin%20Auth%20to%20region.md&anchor=algorithm&_a=preview
                     "login.microsoftonline.com",
+                    "login.microsoft.com",
                     "login.windows.net",
                     "sts.windows.net",
                     )
@@ -1421,7 +1423,7 @@ class ClientApplication(object):
                 reverse=True):
             logger.debug("Cache attempts an RT")
             headers = telemetry_context.generate_headers()
-            if "home_account_id" in query:  # Then use it as CCS Routing info
+            if query.get("home_account_id"):  # Then use it as CCS Routing info
                 headers["X-AnchorMailbox"] = "Oid:{}".format(  # case-insensitive value
                     query["home_account_id"].replace(".", "@"))
             response = client.obtain_token_by_refresh_token(
