@@ -141,7 +141,7 @@ def _signin_silently(
 
 def _signin_interactively(
         authority, client_id, scopes,
-        window=None,
+        parent_window_handle=None,
         prompt=None,
         login_hint=None,
         claims=None,
@@ -164,7 +164,7 @@ def _signin_interactively(
                 logger.warning("Using both select_account and login_hint is ambiguous. Ignoring login_hint.")
         else:
             logger.warning("prompt=%s is not supported by this module", prompt)
-    if not window:
+    if parent_window_handle is None:
         # This fixes account picker hanging in IDE debug mode on some machines
         params.set_additional_parameter("msal_gui_thread", "true")  # Since pymsalruntime 0.8.1
     if enable_msa_pt:
@@ -176,7 +176,7 @@ def _signin_interactively(
         params.set_decoded_claims(claims)
     callback_data = _CallbackData()
     pymsalruntime.signin_interactively(
-        window or pymsalruntime.get_console_window() or pymsalruntime.get_desktop_window(),  # Since pymsalruntime 0.2+
+        parent_window_handle or pymsalruntime.get_console_window() or pymsalruntime.get_desktop_window(),  # Since pymsalruntime 0.2+
         params,
         correlation_id or _get_new_correlation_id(),
         login_hint,  # None value will be accepted since pymsalruntime 0.3+

@@ -1638,7 +1638,7 @@ class PublicClientApplication(ClientApplication):  # browser app or mobile app
             port=None,
             extra_scopes_to_consent=None,
             max_age=None,
-            window=None,
+            parent_window_handle=None,
             **kwargs):
         """Acquire token interactively i.e. via a local browser.
 
@@ -1695,11 +1695,13 @@ class PublicClientApplication(ClientApplication):  # browser app or mobile app
 
             New in version 1.15.
 
-        :param int window:
+        :param int parent_window_handle:
             OPTIONAL. If your app is a GUI app running on modern Windows system,
             and your app opts in to use broker,
             you are recommended to also provide its window handle,
             so that the sign in UI window will properly pop up on top of your window.
+
+            New in version 1.19.0.
 
         :return:
             - A dict containing no "error" key,
@@ -1769,7 +1771,7 @@ class PublicClientApplication(ClientApplication):  # browser app or mobile app
                     prompt=prompt,
                     claims=claims,
                     max_age=max_age,
-                    window=window,
+                    parent_window_handle=parent_window_handle,
                     enable_msa_pt=enable_msa_passthrough,
                     **kwargs.get("data", {}))
                 return self._process_broker_response(response, scopes, kwargs.get("data", {}))
